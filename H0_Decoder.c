@@ -131,8 +131,6 @@ void slaveinit(void)
  	OSZIPORT |= (1<<OSZIA);	//Pin 6 von PORT D als Ausgang fuer OSZI A
 	OSZIDDR |= (1<<OSZIA);	//Pin 7 von PORT D als Ausgang fuer SOSZI B
 
-//   OSZIPORT |= (1<<INT_0);   //
-//   OSZIDDR |= (1<<INT_0);   //Pin 7 von PORT D als Ausgang fuer SOSZI B
 
     
 
@@ -242,10 +240,9 @@ ISR(INT0_vect)
       INT0status |= (1<<INT0_PAKET_A); // erstes Paket lesen
       //OSZIPORT &= ~(1<<PAKETA); 
       //TESTPORT &= ~(1<<TEST2);
- //     OSZIALO; 
+      OSZIALO; 
  //     OSZIBLO;
       
-  //    OSZIPORT &= ~(1<<INT_0);
       
       pausecounter = 0; // pausen detektieren, reset fuer jedes HI
       abstandcounter = 0;// zweites Paket detektieren, 
@@ -257,14 +254,13 @@ ISR(INT0_vect)
       funktion = 0;
       
       HIimpulsdauer = 0;
-      
+ //     OSZIAHI;
    } 
    
    else // Data im Gang, neuer Interrupt
    {
       INT0status |= (1<<INT0_WAIT);
       
-  //    OSZIPORT &= ~(1<<INT_0);
       pausecounter = 0;
       abstandcounter = 0; 
       waitcounter = 0;
@@ -441,6 +437,8 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an SERVOPIN0 aus
                   //   STATUSPORT |= (1<<DATAOK); // LED ON
                    //  STATUSPORT |= (1<<ADDRESSOK); // LED ON
                      //deflokadresse = rawdataA & 0xFF;
+                     
+                     lokstatus |= (1<<ADDRESSBIT);
                      deflokadresse = lokadresseB;
                      deffunktion = (rawdataB & 0x03); // bit 0,1
                      if (deffunktion)
@@ -551,6 +549,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an SERVOPIN0 aus
                }
                else 
                {
+                  lokstatus &= ~(1<<ADDRESSBIT);
                   // aussteigen
                   deflokdata = 0xCA;
                   INT0status == 0;
@@ -576,7 +575,6 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an SERVOPIN0 aus
       } // waitcounter > 2
    } // if INT0_WAIT
   
-//   OSZIPORT |= (1<<INT_0);
    if (INPIN & (1<<DATAPIN)) // Pin HI, input   im Gang
    {
       HIimpulsdauer++; // zaehlen
@@ -590,7 +588,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an SERVOPIN0 aus
       else //if (abstandcounter ) // Paket 2
       {
          abstandcounter = 0;
- //        OSZIAHI;
+         OSZIAHI;
         // tritposition = 0;
    
          
@@ -618,7 +616,6 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an SERVOPIN0 aus
       
       if (HIimpulsdauer < 4) // kurz
       {
-         OSZIPORT |= (1<<INT_0);
          //OSZIAHI;
          HIimpulsdauer =0;
       }
@@ -666,13 +663,16 @@ void main (void)
       if (loopcount0==0x0FFF)
       {
          loopcount0=0;
-         //			LOOPLEDPORT ^=(1<<LOOPLED);
+  //       if (lokstatus & (1<<ADDRESSBIT))
+         {
+            
+   //      			LOOPLEDPORT ^=(1<<LOOPLED);
+         }
          
          //        lcd_gotoxy(14,1);
          //			lcd_puthex(deflokadresse);
          
-         //delay_ms(10);
-         
+         /*
          if (deflokadresse == LOK_ADRESSE)
          {
             
@@ -688,8 +688,8 @@ void main (void)
             //lcd_puthex(lokadresse);
             
          }
-         
-#pragma mark LCD
+         */
+
          
       }
       
