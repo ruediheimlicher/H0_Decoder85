@@ -11,7 +11,7 @@
 
 #define LOOPLEDPORT      PORTB
 #define LOOPLEDDDR      DDRB
-#define LOOPLED         4
+#define LOOPLED         1
 
 #define INT0_RISING      0
 #define INT0_FALLING      1
@@ -23,11 +23,8 @@
 #define OSZIPORT   PORTB      // Ausgang fuer Servo
 #define OSZIDDR   DDRB
 
-
-
 #define OSZIA 1           // 
 
-#define INT_0   2
 
 #define PAKETA   0
 #define PAKETB   1
@@ -65,6 +62,9 @@
 #define FUNKTION     0
 #define OLDFUNKTION  1
 #define FUNKTIONSTATUS 2
+
+
+
 
 
 
