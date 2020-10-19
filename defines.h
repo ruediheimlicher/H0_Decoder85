@@ -73,6 +73,9 @@
 #define FUNKTIONBIT  4
 #define OLDRICHTUNGBIT  5
 #define RICHTUNGBIT  6
+#define STARTDELAYBIT  7
+
+#define STARTDELAY 100
 
 #define TRIT0 0
 #define TRIT1 1
