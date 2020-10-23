@@ -7,23 +7,27 @@
 //
 
 
+/*
+//#include <avr/io.h>
 
-#include <avr/io.h>
-#include <avr/delay.h>
-#include <avr/interrupt.h>
+
 //#include <avr/pgmspace.h>
-//#include <avr/sleep.h>
+
 //#include <avr/eeprom.h>
-#include <inttypes.h>
+//#include <inttypes.h>
+
+//#include <stdint.h>
+
+//#include "lcd.c"
+
+//#include "adc.c"
+*/
+#include <avr/io.h>
+#include <util/delay.h>
+#include <avr/interrupt.h>
+#include <avr/sleep.h>
 #include <avr/wdt.h>
 #include "defines.h"
-#include <stdint.h>
-
-//#include "twislave.c"
-#include "lcd.c"
-
-#include "adc.c"
-
 //***********************************
 						
 uint8_t  LOK_ADRESSE = 0xCC; //	11001100	Trinär
@@ -47,17 +51,11 @@ uint8_t  LOK_ADRESSE = 0xCC; //	11001100	Trinär
 
 
 
-void lcd_puts(const char *s);
 //volatile uint8_t rxbuffer[buffer_size];
 
 /*Der Sendebuffer, der vom Master ausgelesen werden kann.*/
 //volatile uint8_t txbuffer[buffer_size];
 
-//uint16_t EEMEM Brennerlaufzeit;	// Akkumulierte Laufzeit
-
-
-//uint8_t EEMEM WDT_ErrCount0;	// Akkumulierte WDT Restart Events
-//uint8_t EEMEM WDT_ErrCount1;	// WDT Restart Events nach wdt-reset
 
 
 volatile uint8_t	INT0status=0x00;				
@@ -97,8 +95,8 @@ volatile uint8_t   deflokdata = 0;
 //volatile uint16_t   startdelaycounter = 0; // 
 //volatile uint16_t   newlokdata = 0;
 
-volatile uint16_t   blinkWait = 0x2FFF; 
-volatile uint16_t   blinkOK = 0x1FFF; 
+//volatile uint16_t   blinkWait = 0x2FFF; 
+//volatile uint16_t   blinkOK = 0x1FFF; 
 
 volatile uint16_t   rawdataA = 0;
 volatile uint16_t   rawdataB = 0;
@@ -112,7 +110,7 @@ volatile uint8_t   deffunktion = 0;
 volatile uint8_t   waitcounter = 0;
 volatile uint8_t   richtungcounter = 0; // delay fuer Richtungsimpuls
 
-volatile uint8_t	Potwert=45;
+//volatile uint8_t	Potwert=45;
 			//	Zaehler fuer richtige Impulsdauer
 //uint8_t				Servoposition[]={23,33,42,50,60};
 // Richtung invertiert
@@ -122,8 +120,7 @@ volatile uint16_t	taktimpuls=0;
 
 volatile uint16_t   motorPWM=0;
 
-
-uint8_t EEMEM WDT_ErrCount;	// Akkumulierte WDT Restart Events
+volatile uint8_t   wdtcounter = 0;
 
 
 
@@ -138,30 +135,8 @@ void slaveinit(void)
 
    
 	LOOPLEDPORT |=(1<<LOOPLED);
-   LOOPLEDDDR |=(1<<LOOPLED);
-	
-/*
-	//LCD
-	LCD_DDR |= (1<<LCD_RSDS_PIN);	//Pin 5 von PORT B als Ausgang fuer LCD
- 	LCD_DDR |= (1<<LCD_ENABLE_PIN);	//Pin 6 von PORT B als Ausgang fuer LCD
-	LCD_DDR |= (1<<LCD_CLOCK_PIN);	//Pin 7 von PORT B als Ausgang fuer LCD
+   LOOPLEDDDR |=(1<<LOOPLED); // HI
 
-   TESTDDR |= (1<<TEST0); // test0
-   TESTPORT |= (1<<TEST0); // HI
-   TESTDDR |= (1<<TEST1); // test1 
-   TESTPORT |= (1<<TEST1); // HI
-	TESTDDR |= (1<<TEST2); // test2
-   TESTPORT |= (1<<TEST2); // HI
-   
-   
-   STATUSDDR |= (1<<ADDRESSOK); // Adresse ist OK
-   STATUSPORT &= ~(1<<ADDRESSOK); // LO
-   STATUSDDR |= (1<<DATAOK);  // Data ist OK
-	STATUSPORT &= ~(1<<DATAOK); // LO
-
-   STATUSDDR |= (1<<FUNKTIONOK);  // Data ist OK
-   STATUSPORT &= ~(1<<FUNKTIONOK); // LO
-*/
    MOTORDDR |= (1<<MOTOROUT);  // Motor PWM   
    MOTORPORT &= ~(1<<MOTOROUT); // LO
 
@@ -284,7 +259,8 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO
       //  MOTORPORT &= ~(1<<MOTOROUT); // active LO
       MOTORPORT |= (1<<MOTOROUT); // active HI
    }
-   if (motorPWM >= 0xFF)
+  // if (motorPWM >= 0xFF)
+   if (motorPWM >= 14*SPEEDFAKTOR)
    {
       motorPWM = 0;
       //    MOTORPORT |= (1<<MOTOROUT);
@@ -534,7 +510,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO
                                  
                            }
                            //  speed = 10;
-                           speed *= 18;
+                           speed *= SPEEDFAKTOR;
                            
                         } // 
                      }
@@ -618,14 +594,31 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO
       
     } // input LO
 }
-
-
-
+/*
+ISR(WDT_vect)
+{
+      WDTCR |= 1<<WDIE; // re-enable the watch dog interrupt
+      wdt_reset(); // also reset in WDT ISR
+   
+}
+*/
 
 void main (void) 
 {
+   //WDT ausschalte 
+   MCUSR = 0;
+   wdt_disable();
+
    slaveinit();
-   
+   /*
+   for (uint8_t i=0;i<4;i++)
+   {
+      LOOPLEDPORT |=(1<<LOOPLED);
+      _delay_ms(100);
+      LOOPLEDPORT &=~(1<<LOOPLED);
+      _delay_ms(100);
+   }
+    */
    int0_init();
    
    timer2(4);
@@ -634,11 +627,27 @@ void main (void)
    oldfunktion = 0x03; // 0x02
    oldlokdata = 0xCC; // 
    
+   // WDT
+   // https://bigdanzblog.wordpress.com/2015/07/20/resetting-rebooting-attiny85-with-watchdog-timer-wdt/
+  /* 
+   WDTCR|=(1<<WDCE)|(1<<WDE);  // https://www.instructables.com/ATtiny85-Watchdog-reboot-Together-With-SLEEP-Andor/
+   WDTCR=0x00; // disable watchdog
+   
+   // #define WDTO_15MS   0
+
+   WDTCR = 0xD8 | WDTO_15MS;
+  */ 
+   wdt_enable(WDTO_15MS);  // Set watchdog timeout to 15 milliseconds
+   
+   wdt_reset();
+   
    sei();
    
    
    while (1)
    {	
+      // loop: 40 us, takt 85us, mit if-teil 160 us
+     // LOOPLEDPORT &= ~(1<<LOOPLED);
       wdt_reset();
       //Blinkanzeige
       
@@ -647,11 +656,20 @@ void main (void)
       {
          
          loopcount0=0;
-         LOOPLEDPORT ^=(1<<LOOPLED);
- 
-         
+         //LOOPLEDPORT |=(1<<LOOPLED);
+         LOOPLEDPORT ^= (1<<LOOPLED);
+         /*
+         wdtcounter++;
+         if (wdtcounter > 2)
+         {
+           // _delay_ms(1);
+         }
+         */
+         //LOOPLEDPORT &= ~(1<<LOOPLED);
       }
+
       
+     // LOOPLEDPORT |=(1<<LOOPLED);
    }//while
    
    

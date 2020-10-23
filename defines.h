@@ -94,5 +94,6 @@
 #define INT0_PAKET_A 4
 #define INT0_PAKET_B 5
 
+#define SPEEDFAKTOR 18
 
 #endif /* defines_h */
