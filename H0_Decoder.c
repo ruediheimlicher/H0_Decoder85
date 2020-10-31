@@ -122,11 +122,28 @@ volatile uint16_t   motorPWM=0;
 
 volatile uint8_t   wdtcounter = 0;
 
-volatile uint8_t   speedlookup[14] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14};
+// linear
+//volatile uint8_t   speedlookup[15] = {0,18,36,54,72,90,108,126,144,162,180,198,216,234,252};
 
 
+//volatile uint8_t   speedlookup[15] = {0,10,20,30,40,50,60,70,80,90,100,110,120,130,140};
+// linear 100
+//volatile uint8_t   speedlookup[15] = {0,7,14,21,28,35,42,50,57,64,71,78,85,92,100};
 
+// linear 100
+volatile uint8_t   speedlookup[15] = {0,5,11,17,22,28,34,40,45,51,57,62,68,74,80};
+// logarithmisch 180
+//volatile uint8_t   speedlookup[14] = {0,46,73,92,106,119,129,138,146,153,159,165,170,175,180};
 
+//log 160
+//volatile uint8_t   speedlookup[14] = {0,40,64,81,95,105,114,122,129,136,141,146,151,155,160};
+
+// log 140
+//volatile uint8_t   speedlookup[14] = {0,35,56,71,83,92,100,107,113,119,123,128,132,136,140};
+
+// log 100
+//volatile uint8_t   speedlookup[14] = {0,25,40,51,59,66,71,76,81,85,88,91,94,97,100};
+volatile uint8_t   maxspeed =  0;
 
 
 
@@ -140,15 +157,15 @@ void slaveinit(void)
    LOOPLEDDDR |=(1<<LOOPLED); // HI
 
    MOTORDDR |= (1<<MOTOROUT);  // Motor PWM   
-   MOTORPORT &= ~(1<<MOTOROUT); // LO
+   MOTORPORT |= (1<<MOTOROUT); // HI
 
    MOTORDDR |= (1<<MOTORDIR);  // Motor PWM
    MOTORPORT &= ~(1<<MOTORDIR); // LO
 
    MOTORDDR |= (1<<LAMPE);  // Motor PWM
-   MOTORPORT &= ~(1<<LAMPE); // LO
+   MOTORPORT &= ~(1<<LAMPE); // HI
 
-  
+   maxspeed =  252;//speedlookup[14];
 }
 
 
@@ -251,25 +268,31 @@ ISR(INT0_vect)
 }
 
 #pragma mark ISR Timer2
-ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO
+ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
 {
    //MOTORPORT ^= (1<<MOTOROUT);return;
-   
-   motorPWM++;
+//   motorPWM++;
+   if (speed)
+   {
+      motorPWM++;
+   }
+   else
+   {
+      //  motorPWM = 0;
+   }   
    if (motorPWM > speed)
    {
       //  MOTORPORT &= ~(1<<MOTOROUT); // active LO
-      MOTORPORT |= (1<<MOTOROUT); // active HI
+      MOTORPORT |= (1<<MOTOROUT); // Motor ist active LO
    }
-  // if (motorPWM >= 0xFF)
-   if (motorPWM >= 14*SPEEDFAKTOR)
+   // if (motorPWM >= 0xFF)
+   //   if (motorPWM >= 14*SPEEDFAKTOR)
+   if (motorPWM >= 254)
    {
+      MOTORPORT &= ~(1<<MOTOROUT);
       motorPWM = 0;
-      //    MOTORPORT |= (1<<MOTOROUT);
-      {
-         MOTORPORT &= ~(1<<MOTOROUT);
-      }
    }
+  
 #pragma mark TIMER0 INT0
    if (INT0status & (1<<INT0_WAIT))
    {
@@ -279,21 +302,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO
          INT0status &= ~(1<<INT0_WAIT);
          if (INT0status & (1<<INT0_PAKET_A))
          {
-            /*
-             if (richtungcounter> 1)
-             {
-             richtungcounter--;
-             }
-             else if (richtungcounter == 1)
-             {
-             //lokstatus |= (1<<OLDRICHTUNGBIT);
-             // lokstatus &= ~(1<<RICHTUNGBIT);
-             
-             richtungcounter = 0;
-             }
-             */
-            //             TESTPORT &= ~(1<<TEST1);
-            if (tritposition < 8) // Adresse)
+             if (tritposition < 8) // Adresse)
             {
                
                if (INPIN & (1<<DATAPIN)) // Pin HI, 
@@ -364,7 +373,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO
             }
          }
          
-         
+         // Paket anzeigen
          if (INT0status & (1<<INT0_PAKET_B))
          {
             //           TESTPORT |= (1<<TEST2);
@@ -373,6 +382,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO
          {
             //           TESTPORT |= (1<<TEST1);
          }
+         
          
          if (tritposition < 17)
          {
@@ -420,6 +430,9 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO
                      lokstatus |= (1<<ADDRESSBIT);
                      deflokadresse = lokadresseB;
                      deffunktion = (rawdataB & 0x03); // bit 0,1
+                     
+                     uint8_t speedcode = 0;
+                     
                      if (deffunktion)
                      {
                         lokstatus |= (1<<FUNKTIONBIT);
@@ -443,6 +456,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO
                      }
                      
                      // Richtung
+                     
                      if (deflokdata == 0x03) // Wert 1, Richtung togglen
                      {
                         if (!(lokstatus & (1<<RICHTUNGBIT)))
@@ -450,6 +464,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO
                            lokstatus |= (1<<RICHTUNGBIT);
                            richtungcounter = 0xFF;
                            //motorPWM = 0;
+                        //   speed = speedlookup[0];
                            speed = 0;
                            MOTORPORT ^= (1<<MOTORDIR); // Richtung umpolen
                            
@@ -458,63 +473,59 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO
                      else 
                      {  
                         lokstatus &= ~(1<<RICHTUNGBIT); 
-                        if (deflokdata == 0)
-                        {
-                           speed = 0;
-                        }
-                        else 
-                        {
-                           
+ #pragma mark speed                           
                            switch (deflokdata)
                            {
+                              case 0:
+                                 speedcode = 0;
+                                 break;
                               case 0x0C:
-                                 speed = 1;
+                                 speedcode = 1;
                                  break;
                               case 0x0F:
-                                 speed = 2;
+                                 speedcode = 2;
                                  break;
                               case 0x30:
-                                 speed = 3;
+                                 speedcode = 3;
                                  break;
                               case 0x33:
-                                 speed = 4;
+                                 speedcode = 4;
                                  break;
                               case 0x3C:
-                                 speed = 5;
+                                 speedcode = 5;
                                  break;
                               case 0x3F:
-                                 speed = 6;
+                                 speedcode = 6;
                                  break;
                               case 0xC0:
-                                 speed = 7;
+                                 speedcode = 7;
                                  break;
                               case 0xC3:
-                                 speed = 8;
+                                 speedcode = 8;
                                  break;
                               case 0xCC:
-                                 speed = 9;
+                                 speedcode = 9;
                                  break;
                               case 0xCF:
-                                 speed = 10;
+                                 speedcode = 10;
                                  break;
                               case 0xF0:
-                                 speed = 11;
+                                 speedcode = 11;
                                  break;
                               case 0xF3:
-                                 speed = 12;
+                                 speedcode = 12;
                                  break;
                               case 0xFC:
-                                 speed = 13;
+                                 speedcode = 13;
                                  break;
                               case 0xFF:
-                                 speed = 14;
+                                 speedcode = 14;
                                  break;
                                  
                            }
-                           //  speed = 10;
-                           speed *= SPEEDFAKTOR;
+                           //speed *= SPEEDFAKTOR;
                            
-                        } // 
+                        speed = speedlookup[speedcode];
                      }
                      
                      // rawdataA = 0;
@@ -612,15 +623,6 @@ void main (void)
    wdt_disable();
 
    slaveinit();
-   /*
-   for (uint8_t i=0;i<4;i++)
-   {
-      LOOPLEDPORT |=(1<<LOOPLED);
-      _delay_ms(100);
-      LOOPLEDPORT &=~(1<<LOOPLED);
-      _delay_ms(100);
-   }
-    */
    int0_init();
    
    timer2(4);
@@ -639,7 +641,7 @@ void main (void)
 
    WDTCR = 0xD8 | WDTO_15MS;
   */ 
-   wdt_enable(WDTO_15MS);  // Set watchdog timeout to 15 milliseconds
+   wdt_enable(WDTO_30MS);  // Set watchdog timeout to 15 milliseconds
    
    wdt_reset();
    
