@@ -270,23 +270,14 @@ ISR(INT0_vect)
 #pragma mark ISR Timer2
 ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
 {
-   //MOTORPORT ^= (1<<MOTOROUT);return;
-//   motorPWM++;
    if (speed)
    {
       motorPWM++;
    }
-   else
+    if (motorPWM > speed)
    {
-      //  motorPWM = 0;
-   }   
-   if (motorPWM > speed)
-   {
-      //  MOTORPORT &= ~(1<<MOTOROUT); // active LO
       MOTORPORT |= (1<<MOTOROUT); // Motor ist active LO
    }
-   // if (motorPWM >= 0xFF)
-   //   if (motorPWM >= 14*SPEEDFAKTOR)
    if (motorPWM >= 254)
    {
       MOTORPORT &= ~(1<<MOTOROUT);
@@ -304,7 +295,6 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
          {
              if (tritposition < 8) // Adresse)
             {
-               
                if (INPIN & (1<<DATAPIN)) // Pin HI, 
                {
                   lokadresseA |= (1<<tritposition); // bit ist 1
@@ -313,11 +303,9 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
                {
                   lokadresseA &= ~(1<<tritposition); // bit ist 0
                }
-               //tritposition ++;
             }
             else
             {
-               
                if (INPIN & (1<<DATAPIN)) // Pin HI, 
                {
                   rawdataA |= (1<<(tritposition-8)); // bit ist 1
@@ -327,13 +315,10 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
                   rawdataA &= ~(1<<(tritposition-8)); // bit ist 0
                }
             }
-            //TESTPORT |= (1<<TEST1);
-            
          }
          
          if (INT0status & (1<<INT0_PAKET_B))
          {
-            //            TESTPORT &= ~(1<<TEST2);
             if (tritposition < 8) // Adresse)
             {
                
@@ -345,25 +330,16 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
                {
                   lokadresseB &= ~(1<<tritposition); // bit ist 0
                }
-               //tritposition ++;
             }
             else
             {
                if (INPIN & (1<<DATAPIN)) // Pin HI, 
                {
                   rawdataB |= (1<<tritposition-8); // bit ist 1
-                  if ((tritposition > 9) )
-                  {
-                     //                  lokdata |= (1<<((tritposition - 10))); // bit ist 1
-                  }
                }
                else 
                {
                   rawdataB &= ~(1<<tritposition-8); // bit ist 0
-                  if ((tritposition > 9) )
-                  {
-                     //                  lokdata &= ~(1<<((tritposition - 10))); // bit ist 1
-                  }
                }
             }
             
@@ -393,22 +369,12 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
             // Paket A?
             if (INT0status & (1<<INT0_PAKET_A)) // erstes Paket, Werte speichern
             {
-               //oldrawdata = rawdataA;
-               //rawdataA = 0;
-               //STATUSPORT ^= (1<<FUNKTIONOK);
-               oldfunktion = funktion;
-               //funktion = 0;
+                oldfunktion = funktion;
                
                INT0status &= ~(1<<INT0_PAKET_A); // Bit fuer erstes Paket weg
-               //              OSZIPORT |= (1<<PAKETA); 
-               
-               
                INT0status |= (1<<INT0_PAKET_B); // Bit fuer zweites Paket setzen
-               //              OSZIPORT &= ~(1<<PAKETB);   
                tritposition = 0;
-               
             }
-            
             else if (INT0status & (1<<INT0_PAKET_B)) // zweites Paket, Werte testen
             {
                
@@ -425,8 +391,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
                      // Daten uebernehmen
                      //   STATUSPORT |= (1<<DATAOK); // LED ON
                      //  STATUSPORT |= (1<<ADDRESSOK); // LED ON
-                     //deflokadresse = rawdataA & 0xFF;
-                     
+                      
                      lokstatus |= (1<<ADDRESSBIT);
                      deflokadresse = lokadresseB;
                      deffunktion = (rawdataB & 0x03); // bit 0,1
@@ -456,15 +421,12 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
                      }
                      
                      // Richtung
-                     
                      if (deflokdata == 0x03) // Wert 1, Richtung togglen
                      {
                         if (!(lokstatus & (1<<RICHTUNGBIT)))
                         {
                            lokstatus |= (1<<RICHTUNGBIT);
                            richtungcounter = 0xFF;
-                           //motorPWM = 0;
-                        //   speed = speedlookup[0];
                            speed = 0;
                            MOTORPORT ^= (1<<MOTORDIR); // Richtung umpolen
                            
@@ -523,12 +485,8 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
                                  break;
                                  
                            }
-                           //speed *= SPEEDFAKTOR;
-                           
                         speed = speedlookup[speedcode];
                      }
-                     
-                     // rawdataA = 0;
                   }
                   else 
                   {
@@ -536,9 +494,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
                      deflokdata = 0xCA;
                      INT0status == 0;
                      return;
-                     
                   }
-                  
                }
                else 
                {
@@ -550,19 +506,13 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
                   
                }
                
-               //      INT0status &= ~(1<<INT0_PAKET_B); // Bit fuer zweites Paket weg
                INT0status |= (1<<INT0_END);
                //     OSZIPORT |= (1<<PAKETB);
                if (INT0status & (1<<INT0_PAKET_B))
                {
                   //               TESTPORT |= (1<<TEST2);
                }
-               //tritposition = 0;
             } // End Paket B
-            
-            
-            
-            //INT0status == 0;
          }
          
       } // waitcounter > 2
@@ -582,14 +532,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
       {
          abstandcounter = 0;
          //   OSZIAHI;
-         // tritposition = 0;
-         
-         
-         //      INT0status &= ~(1<<INT0_PAKET_A); // Bit fuer erstes Paket weg
-         //      OSZIPORT |= (1<<PAKETA); 
-         
-         
-         //     INT0status |= (1<<INT0_PAKET_B); // Bit fuer zweites Paket setzen
+         //     OSZIPORT |= (1<<PAKETA); 
          //    OSZIPORT &= ~(1<<PAKETB);   
       }
       
@@ -608,17 +551,16 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
     } // input LO
 }
 /*
-ISR(WDT_vect)
+ISR(WDT_vect) // nicht verwendet
 {
       WDTCR |= 1<<WDIE; // re-enable the watch dog interrupt
       wdt_reset(); // also reset in WDT ISR
-   
 }
 */
 
 void main (void) 
 {
-   //WDT ausschalte 
+   //WDT ausschalten 
    MCUSR = 0;
    wdt_disable();
 
@@ -641,17 +583,14 @@ void main (void)
 
    WDTCR = 0xD8 | WDTO_15MS;
   */ 
-   wdt_enable(WDTO_30MS);  // Set watchdog timeout to 15 milliseconds
-   
+   wdt_enable(WDTO_15MS);  // Set watchdog timeout to 15 milliseconds
    wdt_reset();
    
    sei();
    
-   
    while (1)
    {	
-      // loop: 40 us, takt 85us, mit if-teil 160 us
-     // LOOPLEDPORT &= ~(1<<LOOPLED);
+      // Timing: loop: 40 us, takt 85us, mit if-teil 160 us
       wdt_reset();
       //Blinkanzeige
       
@@ -660,22 +599,15 @@ void main (void)
       {
          
          loopcount0=0;
-         //LOOPLEDPORT |=(1<<LOOPLED);
          LOOPLEDPORT ^= (1<<LOOPLED);
          /*
+         // wdt-delay, nicht verwendet
          wdtcounter++;
          if (wdtcounter > 2)
          {
            // _delay_ms(1);
          }
          */
-         //LOOPLEDPORT &= ~(1<<LOOPLED);
       }
-
-      
-     // LOOPLEDPORT |=(1<<LOOPLED);
    }//while
-   
-   
-   // return 0;
 }
