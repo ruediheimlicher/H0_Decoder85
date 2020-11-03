@@ -159,13 +159,14 @@ void slaveinit(void)
    MOTORDDR |= (1<<MOTOROUT);  // Motor PWM   
    MOTORPORT |= (1<<MOTOROUT); // HI
 
-   MOTORDDR |= (1<<MOTORDIR);  // Motor PWM
+   MOTORDDR |= (1<<MOTORDIR);  // Motor DIR
    MOTORPORT &= ~(1<<MOTORDIR); // LO
 
-   MOTORDDR |= (1<<LAMPE);  // Motor PWM
+   MOTORDDR |= (1<<LAMPE);  // Lampe
    MOTORPORT &= ~(1<<LAMPE); // HI
 
    maxspeed =  252;//speedlookup[14];
+
 }
 
 
@@ -564,6 +565,9 @@ void main (void)
    MCUSR = 0;
    wdt_disable();
 
+   
+   
+   
    slaveinit();
    int0_init();
    
