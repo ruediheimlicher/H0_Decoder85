@@ -152,10 +152,10 @@ void slaveinit(void)
  	OSZIPORT |= (1<<OSZIA);	//Pin 6 von PORT D als Ausgang fuer OSZI A
 	OSZIDDR |= (1<<OSZIA);	//Pin 7 von PORT D als Ausgang fuer SOSZI B
 
-   
+
 	LOOPLEDPORT |=(1<<LOOPLED);
    LOOPLEDDDR |=(1<<LOOPLED); // HI
-
+   
    MOTORDDR |= (1<<MOTOROUT);  // Motor PWM   
    MOTORPORT |= (1<<MOTOROUT); // HI
 
@@ -601,11 +601,11 @@ void main (void)
       loopcount0++;
       if (loopcount0==0x1FFF)
       {
-         
+        
          loopcount0=0;
          LOOPLEDPORT ^= (1<<LOOPLED);
          /*
-         // wdt-delay, nicht verwendet
+          // wdt-delay, nicht verwendet
          wdtcounter++;
          if (wdtcounter > 2)
          {

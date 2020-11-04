@@ -58,6 +58,9 @@
 #define MOTOROUT      0
 #define MOTORDIR      3
 
+#define MOTORAUX      1
+
+
 // lokstatus-Bits
 #define FUNKTION     0
 #define OLDFUNKTION  1
