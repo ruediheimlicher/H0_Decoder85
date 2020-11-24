@@ -564,9 +564,6 @@ void main (void)
    //WDT ausschalten 
    MCUSR = 0;
    wdt_disable();
-
-   
-   
    
    slaveinit();
    int0_init();
