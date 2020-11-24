@@ -11,7 +11,7 @@
 
 #define LOOPLEDPORT      PORTB
 #define LOOPLEDDDR      DDRB
-#define LOOPLED         1
+#define LOOPLED         3 // wie Motoraux
 
 #define INT0_RISING      0
 #define INT0_FALLING      1
@@ -23,7 +23,7 @@
 #define OSZIPORT   PORTB      // Ausgang fuer Servo
 #define OSZIDDR   DDRB
 
-#define OSZIA 1           // 
+#define OSZIA 3           // wie Motoraux
 
 
 #define PAKETA   0
@@ -45,20 +45,25 @@
 //#define STATUSPORT   PORTC
 //#define STATUSDDR    DDRC
 
-// Pins
-#define FUNKTIONOK   2
-#define ADDRESSOK    3
-#define DATAOK       4
 
 #define MOTORPORT   PORTB
 #define MOTORDDR    DDRB
 #define MOTORPIN    PINB
 
-#define LAMPE        4
-#define MOTOROUT      0
-#define MOTORDIR      3
+//PINS
 
-#define MOTORAUX      1
+#define MOTORDIR      0
+#define MOTOROUT      1
+// INT0               2
+#define MOTORAUX      3
+#define LAMPE         4
+
+
+
+// Bits
+#define FUNKTIONOK   2
+#define ADDRESSOK    3
+#define DATAOK       4
 
 
 // lokstatus-Bits
@@ -96,7 +101,5 @@
 
 #define INT0_PAKET_A 4
 #define INT0_PAKET_B 5
-
-#define SPEEDFAKTOR 18
 
 #endif /* defines_h */
