@@ -154,8 +154,8 @@ uint8_t loopledtakt = 0x1F;
 
 void slaveinit(void)
 {
- 	//OSZIPORT |= (1<<OSZIA);	//Pin 6 von PORT D als Ausgang fuer OSZI A
-	//OSZIDDR |= (1<<OSZIA);	//Pin 7 von PORT D als Ausgang fuer SOSZI B
+ 	OSZIPORT |= (1<<OSZIA);	//Pin 6 von PORT D als Ausgang fuer OSZI A
+	OSZIDDR |= (1<<OSZIA);	//Pin 7 von PORT D als Ausgang fuer SOSZI B
 
 
    //   LOOPLEDDDR |=(1<<LOOPLED); // HI
@@ -228,6 +228,8 @@ void timer2 (uint8_t wert)
    // enable global interrupts
    sei();
 } 
+
+#pragma mark INT0
 ISR(INT0_vect) 
 {
    //OSZIATOG;
@@ -282,6 +284,7 @@ ISR(INT0_vect)
 #pragma mark ISR Timer2
 ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
 {
+   //OSZIATOG;
    if (speed)
    {
       motorPWM++;
