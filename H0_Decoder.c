@@ -257,8 +257,8 @@ ISR(INT0_vect)
       // parameter resetten
       lokadresseA = 0;
       lokadresseB = 0;
-      rawdataA = 0;
-      rawdataB = 0;
+ //     rawdataA = 0;
+//      rawdataB = 0;
       
       rawfunktionA=0;
       rawfunktionB=0;
