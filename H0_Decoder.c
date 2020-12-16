@@ -127,13 +127,17 @@ volatile uint8_t   wdtcounter = 0;
 // linear 80
 //volatile uint8_t   speedlookup[15] = {0,5,11,17,22,28,34,40,45,51,57,62,68,74,80};
 
+// linear 250 mit offset 20
+volatile uint8_t   speedlookup[15] = {0,36,52,69,85,102,118,135,151,167,184,200,217,233,250};
+
 // linear mit offset 30
 //volatile uint8_t   speedlookup[15] = {0,33,37,40,44,47,51,55,58,62,65,69,72,76,80};
 
 // linear mit offset 22
-volatile uint8_t   speedlookup[15] = {0,26,30,34,38,42,46,51,55,59,63,67,71,75,80};
+//volatile uint8_t   speedlookup[15] = {0,26,30,34,38,42,46,51,55,59,63,67,71,75,80};
 
-
+// linear mit offset 20
+//volatile uint8_t   speedlookup[15] = {0,24,28,32,37,41,45,50,54,58,62,67,71,75,80};
 
 // logarithmisch 180
 //volatile uint8_t   speedlookup[14] = {0,46,73,92,106,119,129,138,146,153,159,165,170,175,180};
@@ -295,7 +299,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
       
    }
    
-   if (motorPWM >= 254) //ON, neuer Motorimpuls
+   if ((motorPWM >= 254) && speed) //ON, neuer Motorimpuls
    {
       MOTORPORT &= ~(1<<MOTOROUT);
       motorPWM = 0;
@@ -527,6 +531,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
                               break;
                            default:
                               speedcode = 0;
+                              MOTORPORT |= (1<<MOTOROUT);
                               break;
                               
                         }
@@ -585,9 +590,9 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
       {
          pausecounter ++; // pausencounter incrementieren
       }
-      else 
+      else  //pause detektiert
       {
-         //OSZIBHI; //pause detektiert
+         //OSZIBHI;
          pausecounter = 0;
          INT0status = 0; //Neue Daten abwarten
          return;
@@ -608,8 +613,10 @@ void main (void)
    //WDT ausschalten 
    MCUSR = 0;
    wdt_disable();
-   MOTORDDR |= (1<<MOTORDIR);  // Output Motor PWM  
+  
    MOTORDDR &= ~(1<<MOTORAUX);  // Input, AUX, Sniffer fuer DIR nach reset
+    MOTORDDR |= (1<<MOTORDIR);  // Output Motor PWM  
+   
    if (MOTORPIN & (1<<MOTORAUX)) // AUX ist noch HI
    {
       lastDIR = 1;
