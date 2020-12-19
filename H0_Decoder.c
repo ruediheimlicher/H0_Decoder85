@@ -113,6 +113,7 @@ volatile uint8_t   richtungcounter = 0; // delay fuer Richtungsimpuls
 
 
 volatile uint8_t   motorPWM=0;
+volatile uint8_t   motorcounter=0;
 
 volatile uint8_t   wdtcounter = 0;
 
@@ -291,7 +292,12 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
    //OSZIATOG;
    if (speed)
    {
-      motorPWM++;
+      motorcounter++;
+      if (motorcounter > MOTORTEILER)
+      {
+         motorPWM++;
+         motorcounter = 0;
+      }
    }
    if ((motorPWM > speed) || (speed == 0)) // Impulszeit abgelaufen oder speed ist 0
    {
@@ -303,6 +309,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
    {
       MOTORPORT &= ~(1<<MOTOROUT);
       motorPWM = 0;
+      motorcounter = 0;
    }
    
    
@@ -431,7 +438,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
 #pragma mark EQUAL
                if (lokadresseA && ((rawfunktionA == rawfunktionB) && (rawdataA == rawdataB) && (lokadresseA == lokadresseB))) // Lokadresse > 0 und Lokadresse und Data OK
                {
-                  if (lokadresseB == LOK_ADRESSE)
+                  if (lokadresseB == LOK_ADRESSE) // Lok stimmt, Data vollständig
                   {
                      // Daten uebernehmen
                      //   STATUSPORT |= (1<<DATAOK); // LED ON
@@ -486,6 +493,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
                         {
                            case 0:
                               speedcode = 0;
+                              MOTORPORT |= (1<<MOTOROUT);
                               break;
                            case 0x0C:
                               speedcode = 1;
@@ -538,25 +546,27 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
                         speed = speedlookup[speedcode];
                      }
                   }
-                  else 
+                  else // Lok stimmt nicht
                   {
                      // aussteigen
-                     deflokdata = 0xCA;
+               //      deflokdata = 0xCA;
+                     deflokdata = 0;
                      INT0status = 0;
                      return;
                   }
                }
-               else 
+               else // Lok stimmt nicht, Data unvollständig
                {
                   lokstatus &= ~(1<<ADDRESSBIT);
                   // aussteigen
-                  deflokdata = 0xCA;
+             //     deflokdata = 0xCA;
+                  deflokdata = 0;
                   INT0status = 0;
                   return;
                   
                }
                
-               INT0status |= (1<<INT0_END);
+               INT0status |= (1<<INT0_END); 
                //     OSZIPORT |= (1<<PAKETB);
                if (INT0status & (1<<INT0_PAKET_B))
                {
@@ -615,7 +625,7 @@ void main (void)
    wdt_disable();
   
    MOTORDDR &= ~(1<<MOTORAUX);  // Input, AUX, Sniffer fuer DIR nach reset
-    MOTORDDR |= (1<<MOTORDIR);  // Output Motor PWM  
+   MOTORDDR |= (1<<MOTORDIR);  // Output Motor PWM  
    
    if (MOTORPIN & (1<<MOTORAUX)) // AUX ist noch HI
    {
