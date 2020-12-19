@@ -28,11 +28,16 @@
 #include <avr/sleep.h>
 #include <avr/wdt.h>
 #include "defines.h"
+
+#define LOK_TYP_DIESEL  1
+#define LOK_TYP_RE44  2
 //***********************************
 						
 uint8_t  LOK_ADRESSE = 0xCC; //	11001100	Trinär
 //									
 //***********************************
+
+uint8_t LOK_TYP = LOK_TYP_RE44;
 
 /*
  commands
@@ -313,6 +318,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
    }
    
    
+   
 #pragma mark TIMER0 INT0
    if (INT0status & (1<<INT0_WAIT))
    {
@@ -453,13 +459,52 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
                      if (deffunktion)
                      {
                         lokstatus |= (1<<FUNKTIONBIT);
-                        MOTORPORT |= (1<<LAMPE);
+                        switch (LOK_TYP)
+                        {
+                           case  LOK_TYP_DIESEL:
+                           {
+                              MOTORPORT |= (1<<LAMPE);
+                           }break;
+                           case  LOK_TYP_RE44:
+                           {
+                              MOTORPORT &= ~(1<<LAMPE);
+                           }break;
+                           default:
+                           {
+                              MOTORPORT |= (1<<LAMPE);
+                           }break;
+                              
+                        }// switch lok_typ
+                        
+                          
+                     
                      }
                      else
                      {
                         lokstatus &= ~(1<<FUNKTIONBIT);
-                        MOTORPORT &= ~(1<<LAMPE);
+                        
+                        switch (LOK_TYP)
+                         {
+                            case  LOK_TYP_DIESEL:
+                            {
+                               MOTORPORT &= ~(1<<LAMPE);
+                            }break;
+                            case  LOK_TYP_RE44:
+                            {
+                               MOTORPORT |= (1<<LAMPE);
+                            }break;
+                              
+                            default:
+                            {
+                               MOTORPORT &= ~(1<<LAMPE);
+                            }break;
+                         }// switch lok_typ
+
+                        
+                       
                      }
+                     
+                     
                      for (uint8_t i=0;i<8;i++)
                      {
                         //if ((rawdataB & (1<<(2+i))))
