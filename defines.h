@@ -102,4 +102,7 @@
 #define INT0_PAKET_A 4
 #define INT0_PAKET_B 5
 
+
+#define LAMPEMAX 0x0F // 50%
+
 #endif /* defines_h */

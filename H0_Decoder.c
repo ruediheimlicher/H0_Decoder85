@@ -56,12 +56,6 @@ uint8_t LOK_TYP = LOK_TYP_RE44;
 
 
 
-//volatile uint8_t rxbuffer[buffer_size];
-
-/*Der Sendebuffer, der vom Master ausgelesen werden kann.*/
-//volatile uint8_t txbuffer[buffer_size];
-
-
 
 volatile uint8_t   INT0status=0x00;            
 volatile uint8_t   signalstatus=0x00; // status TRIT
@@ -119,6 +113,10 @@ volatile uint8_t   richtungcounter = 0; // delay fuer Richtungsimpuls
 
 volatile uint8_t   motorPWM=0;
 volatile uint8_t   motorcounter=0;
+
+volatile uint8_t   lampePWM=0;
+volatile uint8_t   lampecounter=0;
+
 
 volatile uint8_t   wdtcounter = 0;
 
@@ -311,9 +309,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed > 0
    if ((motorPWM > speed) || (speed == 0)) // Impulszeit abgelaufen oder speed ist 0
    {
       MOTORPORT |= (1<<MOTOROUT); // OFF, Motor ist active LO
-      
    }
-   
    if ((motorPWM >= 254) && speed) //ON, neuer Motorimpuls
    {
       MOTORPORT &= ~(1<<MOTOROUT);
@@ -321,8 +317,22 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed > 0
       motorcounter = 0;
    }
    
-   
-   
+    // Lampe PWM
+   if (lokstatus & (1<<FUNKTIONBIT)) // Lampe ist ON
+   {
+      lampePWM++;
+      if (lampePWM > LAMPEMAX)
+      {
+         MOTORPORT |= (1<<LAMPE); // lampe OFF
+      }
+      if (lampePWM == 0)
+      {
+         MOTORPORT &= ~(1<<LAMPE); // Lampe wieder ON
+         //lampePWM = 0;
+      }
+   } // if lampe ON
+
+
 #pragma mark TIMER0 INT0
    if (INT0status & (1<<INT0_WAIT))
    {
@@ -503,8 +513,6 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed > 0
                                MOTORPORT &= ~(1<<LAMPE);
                             }break;
                          }// switch lok_typ
-
-                        
                        
                      }
                      

@@ -1,1 +1,2 @@
 H0-Decoder ATTiny85
+avr-size --mcu=attiny85 -C H0_Decoder.elf
