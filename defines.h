@@ -57,7 +57,7 @@
 // INT0               2
 #define MOTORAUX      3
 #define LAMPE         4
-#define MOTORTEILER  2
+#define MOTORTEILER   2
 
 
 // Bits

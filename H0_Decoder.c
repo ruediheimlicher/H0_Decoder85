@@ -33,7 +33,7 @@
 #define LOK_TYP_RE44  2
 //***********************************
 						
-uint8_t  LOK_ADRESSE = 0xCC; //	11001100	TrinŠr
+uint8_t  LOK_ADRESSE = 0xC3; //	11001100	TrinŠr
 //									
 //***********************************
 
@@ -65,7 +65,7 @@ uint8_t LOK_TYP = LOK_TYP_RE44;
 
 volatile uint8_t   INT0status=0x00;            
 volatile uint8_t   signalstatus=0x00; // status TRIT
-volatile uint8_t  pausestatus=0x00;
+volatile uint8_t   pausestatus=0x00;
 
 
 volatile uint8_t   address=0x00; 
@@ -130,11 +130,12 @@ volatile uint8_t   wdtcounter = 0;
 // linear 100
 //volatile uint8_t   speedlookup[15] = {0,7,14,21,28,35,42,50,57,64,71,78,85,92,100};
 
-// linear 80
+//Diesel
+// linear 80 
 //volatile uint8_t   speedlookup[15] = {0,5,11,17,22,28,34,40,45,51,57,62,68,74,80};
 
 // linear 250 mit offset 20
-volatile uint8_t   speedlookup[15] = {0,36,52,69,85,102,118,135,151,167,184,200,217,233,250};
+//volatile uint8_t   speedlookup[15] = {0,36,52,69,85,102,118,135,151,167,184,200,217,233,250};
 
 // linear mit offset 30
 //volatile uint8_t   speedlookup[15] = {0,33,37,40,44,47,51,55,58,62,65,69,72,76,80};
@@ -145,17 +146,20 @@ volatile uint8_t   speedlookup[15] = {0,36,52,69,85,102,118,135,151,167,184,200,
 // linear mit offset 20
 //volatile uint8_t   speedlookup[15] = {0,24,28,32,37,41,45,50,54,58,62,67,71,75,80};
 
-// logarithmisch 180
-//volatile uint8_t   speedlookup[14] = {0,46,73,92,106,119,129,138,146,153,159,165,170,175,180};
+// Quadratisch  mit 250
+//volatile uint8_t   speedlookup[15] = {0,21,24,30,38,49,62,77,95,115,137,161,188,218,250};
+//volatile uint8_t   speedlookup[15] = {0,46,54,63,73,84,97,112,127,144,163,183,204,226,250,};
 
-//log 160
-//volatile uint8_t   speedlookup[14] = {0,40,64,81,95,105,114,122,129,136,141,146,151,155,160};
+// Re44
+//volatile uint8_t   speedlookup[15] = {0,59,64,71,80,90,101,115,129,146,163,183,204,226,250,};// 
 
-// log 140
-//volatile uint8_t   speedlookup[14] = {0,35,56,71,83,92,100,107,113,119,123,128,132,136,140};
 
-// log 100
-//volatile uint8_t   speedlookup[14] = {0,25,40,51,59,66,71,76,81,85,88,91,94,97,100};
+// 10/ 80
+//volatile uint8_t   speedlookup[15] = {0,12,14,17,20,24,28,33,38,44,50,57,64,72,80,};
+
+// 12/100
+volatile uint8_t   speedlookup[15] = {0,13,14,17,20,24,29,35,42,49,58,67,77,88,100};
+
 volatile uint8_t   maxspeed =  252;
 
 volatile uint8_t   lastDIR =  0;
@@ -292,7 +296,7 @@ ISR(INT0_vect)
 }
 
 #pragma mark ISR Timer2
-ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
+ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed > 0
 {
    //OSZIATOG;
    if (speed)
@@ -519,21 +523,26 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed
                      }
                      
                      // Richtung
-                     if (deflokdata == 0x03) // Wert 1, Richtung togglen
+                     if ((deflokdata == 0x03)) // Wert 1, Richtung togglen
                      {
-                        if (!(lokstatus & (1<<RICHTUNGBIT)))
+                         if ((!(lokstatus & (1<<RICHTUNGBIT))) )
                         {
                            lokstatus |= (1<<RICHTUNGBIT);
-                           richtungcounter = 0xFF;
                            speed = 0;
+                           richtungcounter = 16;
                            MOTORPORT ^= (1<<MOTORDIR); // Richtung umpolen
-                           
                         }
                      }
                      else 
                      {  
-                        lokstatus &= ~(1<<RICHTUNGBIT); 
-#pragma mark speed                           
+                           if (richtungcounter--) // erneutes Umschalten verhindern
+                            {
+                               lokstatus &= ~(1<<RICHTUNGBIT);
+                            }
+
+                         
+#pragma mark speed      
+                                        
                         switch (deflokdata)
                         {
                            case 0:
