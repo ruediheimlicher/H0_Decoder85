@@ -33,7 +33,7 @@
 #define LOK_TYP_RE44  2
 //***********************************
 						
-uint8_t  LOK_ADRESSE = 0xC3; //	11001100	Trinär
+uint8_t  LOK_ADRESSE = 0xF3; //	1011 binaer 11001111	Trinär
 //									
 //***********************************
 
