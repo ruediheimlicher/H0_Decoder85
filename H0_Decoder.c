@@ -151,7 +151,6 @@ volatile uint8_t   wdtcounter = 0;
 // Re44
 //volatile uint8_t   speedlookup[15] = {0,59,64,71,80,90,101,115,129,146,163,183,204,226,250,};// 
 
-
 // 10/ 80
 //volatile uint8_t   speedlookup[15] = {0,12,14,17,20,24,28,33,38,44,50,57,64,72,80,};
 
@@ -176,7 +175,24 @@ void slaveinit(void)
    MOTORPORT |= (1<<MOTOROUT); // HI, Motor OFF
    
    MOTORDDR |= (1<<LAMPE);  // Lampe
-   MOTORPORT |= (1<<LAMPE); // HI
+   //MOTORPORT |= (1<<LAMPE); // HI
+   switch (LOK_TYP)
+   {
+      case  LOK_TYP_DIESEL:
+      {
+         MOTORPORT |= (1<<LAMPE); // lampe ON HI
+      }break;
+      case  LOK_TYP_RE44:
+      {
+         MOTORPORT &= ~(1<<LAMPE); // lampe ON LO
+      }break;
+      default:
+      {
+         MOTORPORT |= (1<<LAMPE);
+      }break;
+         
+   }// switch lok_typ
+
    
    maxspeed =  252;//speedlookup[14];
 
@@ -191,6 +207,7 @@ void int0_init(void)
    GIMSK |= (1<<INT0); // enable external int0
    INT0status |= (1<<INT0_RISING);
    INT0status = 0;
+   INT0status |= (1<<INT0_WAIT);
    
 }
 
@@ -238,6 +255,7 @@ void timer2 (uint8_t wert)
    TIMSK |= (1 << OCIE0A);
    
    // enable global interrupts
+   
    sei();
 } 
 
@@ -320,6 +338,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed > 0
     // Lampe PWM
    if (lokstatus & (1<<FUNKTIONBIT)) // Lampe ist ON
    {
+      /*
       lampePWM++;
       if (lampePWM > LAMPEMAX)
       {
@@ -330,6 +349,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed > 0
          MOTORPORT &= ~(1<<LAMPE); // Lampe wieder ON
          //lampePWM = 0;
       }
+       */
    } // if lampe ON
 
 
@@ -469,7 +489,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed > 0
                      //deffunktion = (rawdataB & 0x03); // bit 0,1 funktion als eigene var
                      deffunktion = rawfunktionB;
                      uint8_t speedcode = 0;
-                     
+                     /*
                      if (deffunktion)
                      {
                         lokstatus |= (1<<FUNKTIONBIT);
@@ -515,7 +535,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed > 0
                          }// switch lok_typ
                        
                      }
-                     
+                     */
                      
                      for (uint8_t i=0;i<8;i++)
                      {
@@ -701,11 +721,13 @@ void main (void)
       MOTORPORT &= ~(1<<MOTORDIR);
       // loopledtakt = 0x0FFF;
    }
+   
    //   lastDIR = 1;
    slaveinit();
+  
    int0_init();
    
-   timer2(4);
+    timer2(4);
    uint8_t loopcount0=0;
    uint8_t loopcount1=0;
    
@@ -749,19 +771,22 @@ void main (void)
       
       if (loopcount0>=loopledtakt)
       {
-         //       LOOPLEDPORT ^= (1<<LOOPLED); // Kontrolle lastDIR
+         MOTORPORT ^= (1<<LAMPE);
+         //LOOPLEDPORT ^= (1<<LOOPLED); // Kontrolle lastDIR
          loopcount0=0;
          loopcount1++;
          if (loopcount1 >= loopledtakt)
          {
             loopcount1 = 0;
             // wdt-delay, fuer test
+            /*
             wdtcounter++;
             if (wdtcounter > 60)
             {
                wdtcounter=0;
                //              _delay_ms(1000);
             }
+             */
          }
          
       }

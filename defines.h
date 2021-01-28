@@ -105,4 +105,5 @@
 
 #define LAMPEMAX 0x40 // 50%
 
+
 #endif /* defines_h */
