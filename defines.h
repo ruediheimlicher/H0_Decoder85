@@ -57,7 +57,8 @@
 // INT0               2
 #define MOTORAUX      3
 #define LAMPE         4
-#define MOTORTEILER   2
+
+#define MOTORTEILER   1
 
 
 // Bits
@@ -81,9 +82,9 @@
 #define FUNKTIONBIT  4
 #define OLDRICHTUNGBIT  5
 #define RICHTUNGBIT  6
-#define STARTDELAYBIT  7
+//#define STARTDELAYBIT  7
 
-#define STARTDELAY 100
+//#define STARTDELAY 100
 
 #define TRIT0 0
 #define TRIT1 1
@@ -102,8 +103,10 @@
 #define INT0_PAKET_A 4
 #define INT0_PAKET_B 5
 
+#define INT0_RUN 7 // detektiert Datenfluss
 
 #define LAMPEMAX 0x40 // 50%
 
+#define FIRSTRUN_END 2
 
 #endif /* defines_h */

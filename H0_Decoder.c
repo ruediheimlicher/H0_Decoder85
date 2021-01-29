@@ -120,6 +120,8 @@ volatile uint8_t   lampecounter=0;
 
 volatile uint8_t   wdtcounter = 0;
 
+volatile uint8_t   int0counter = 0; // detektiert datenfluss
+
 // linear
 //volatile uint8_t   speedlookup[15] = {0,18,36,54,72,90,108,126,144,162,180,198,216,234,252};
 
@@ -192,10 +194,9 @@ void slaveinit(void)
       }break;
          
    }// switch lok_typ
-
    
    maxspeed =  252;//speedlookup[14];
-
+   INT0status = 0;
 }
 
 
@@ -263,8 +264,14 @@ void timer2 (uint8_t wert)
 ISR(INT0_vect) 
 {
    //OSZIATOG;
+   MOTORPORT &= ~(1<<LAMPE); // 2 us
+   
    if (INT0status == 0) // neue Daten beginnen
    {
+    //  MOTORPORT &= ~(1<<LAMPE); // 2 us
+      INT0status |= (1<<INT0_RUN); // datenfluss im Gang
+      int0counter = 0;
+      
       INT0status |= (1<<INT0_START);
       INT0status |= (1<<INT0_WAIT); // delay, um Wert des Eingangs zum richtigen Zeitpunkt zu messen
       
@@ -309,6 +316,8 @@ ISR(INT0_vect)
       //   INT0status |= (1<<INT0_RISING); // wait for next rise
       //    MCUCR = (1<<ISC00) |(1<<ISC01); // raise int0 on rising edge
    }
+   MOTORPORT |= (1<<LAMPE);
+   
 }
 
 #pragma mark ISR Timer2
@@ -353,12 +362,14 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed > 0
    } // if lampe ON
 
 
-#pragma mark TIMER0 INT0
+#pragma mark TIMER0 INT0_WAIT
    if (INT0status & (1<<INT0_WAIT))
    {
+      
       waitcounter++;
       if (waitcounter > 2)
       {
+         
          INT0status &= ~(1<<INT0_WAIT);
          if (INT0status & (1<<INT0_PAKET_A))
          {
@@ -689,7 +700,6 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed > 0
          INT0status = 0; //Neue Daten abwarten
          return;
       }
-      
    } // input LO
 }
 /*
@@ -713,23 +723,29 @@ void main (void)
    {
       lastDIR = 1;
       MOTORPORT |= (1<<MOTORDIR); 
+      MOTORPORT |= (1<<MOTOROUT); 
       //loopledtakt = 0x1FFF;
    }
    else 
    {
       lastDIR = 0;
       MOTORPORT &= ~(1<<MOTORDIR);
+      MOTORPORT |= (1<<MOTOROUT); 
       // loopledtakt = 0x0FFF;
    }
    
    //   lastDIR = 1;
    slaveinit();
   
-   int0_init();
+ //  int0_init();
    
-    timer2(4);
+   timer2(4);
+   
    uint8_t loopcount0=0;
    uint8_t loopcount1=0;
+   
+    uint8_t firstruncount=0;
+   
    
    
    
@@ -749,13 +765,31 @@ void main (void)
     */ 
    wdt_enable(WDTO_15MS);  // Set watchdog timeout to 15 milliseconds
    wdt_reset();
-   
+   INT0status = 0;
    sei();
+   
    
    while (1)
    {   
       // Timing: loop: 40 us, takt 85us, mit if-teil 160 us
       wdt_reset();
+      if (firstruncount < FIRSTRUN_END)
+      {
+         firstruncount++;
+         if (firstruncount == FIRSTRUN_END)
+         {
+         int0_init();
+         //   timer2(4);
+            INT0status =0;            
+         }
+
+      }
+      
+      int0counter ++;
+      if (int0counter > 5)
+      {
+         
+      }
       //Blinkanzeige
       /*
        if (lastDIR)
@@ -771,7 +805,7 @@ void main (void)
       
       if (loopcount0>=loopledtakt)
       {
-         MOTORPORT ^= (1<<LAMPE);
+         //MOTORPORT ^= (1<<LAMPE);
          //LOOPLEDPORT ^= (1<<LOOPLED); // Kontrolle lastDIR
          loopcount0=0;
          loopcount1++;
