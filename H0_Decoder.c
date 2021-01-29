@@ -264,11 +264,11 @@ void timer2 (uint8_t wert)
 ISR(INT0_vect) 
 {
    //OSZIATOG;
-   MOTORPORT &= ~(1<<LAMPE); // 2 us
+   //MOTORPORT &= ~(1<<LAMPE); // 2 us
    
    if (INT0status == 0) // neue Daten beginnen
    {
-    //  MOTORPORT &= ~(1<<LAMPE); // 2 us
+      MOTORPORT &= ~(1<<LAMPE); // 2 us
       INT0status |= (1<<INT0_RUN); // datenfluss im Gang
       int0counter = 0;
       
@@ -663,6 +663,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed > 0
                //     OSZIPORT |= (1<<PAKETB);
                if (INT0status & (1<<INT0_PAKET_B))
                {
+                  INT0status = 0;
                   //               TESTPORT |= (1<<TEST2);
                }
             } // End Paket B
@@ -785,10 +786,18 @@ void main (void)
 
       }
       
-      int0counter ++;
-      if (int0counter > 5)
+      if (INT0status & (1<<INT0_RUN)) // Ende Data abwarten, nicht verwendet
       {
-         
+         int0counter++;
+         /*
+         if (int0counter > 20)
+         {
+            INT0status &= ~(1<<INT0_RUN);
+            //MOTORPORT |= (1<<LAMPE);
+            //INT0status = 0;
+            int0counter = 0;
+         }
+          */
       }
       //Blinkanzeige
       /*
