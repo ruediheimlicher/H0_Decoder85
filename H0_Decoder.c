@@ -31,6 +31,8 @@
 
 #define LOK_TYP_DIESEL  1
 #define LOK_TYP_RE44  2
+
+
 //***********************************
 						
 uint8_t  LOK_ADRESSE = 0xF3; //	1011 binaer 11001111	Trinär
@@ -167,14 +169,20 @@ uint8_t loopledtakt = 0x1F;
 
 void slaveinit(void)
 {
- 	OSZIPORT |= (1<<OSZIA);	//Pin 6 von PORT D als Ausgang fuer OSZI A
-	OSZIDDR |= (1<<OSZIA);	//Pin 7 von PORT D als Ausgang fuer SOSZI B
+ 	//OSZIPORT |= (1<<OSZIA);	//Pin 6 von PORT D als Ausgang fuer OSZI A
+	//OSZIDDR |= (1<<OSZIA);	//Pin 7 von PORT D als Ausgang fuer SOSZI B
 
 
    //   LOOPLEDDDR |=(1<<LOOPLED); // HI
    //   LOOPLEDPORT |=(1<<LOOPLED);
-   MOTORDDR |= (1<<MOTOROUT);  // Output Motor PWM   
-   MOTORPORT |= (1<<MOTOROUT); // HI, Motor OFF
+ 
+   // in loop verschoben
+//   MOTORDDR |= (1<<MOTOROUT);  // Output Motor PWM   
+//   MOTORPORT |= (1<<MOTOROUT); // HI, Motor OFF
+   
+   //MOTORDDR &= ~(1<<2);
+    MOTORDDR |= (1<<MOTORINT0); 
+   MOTORPORT &= ~(1<<MOTORINT0); 
    
    MOTORDDR |= (1<<LAMPE);  // Lampe
    //MOTORPORT |= (1<<LAMPE); // HI
@@ -186,7 +194,7 @@ void slaveinit(void)
       }break;
       case  LOK_TYP_RE44:
       {
-         MOTORPORT &= ~(1<<LAMPE); // lampe ON LO
+         //MOTORPORT &= ~(1<<LAMPE); // PWM in ISR
       }break;
       default:
       {
@@ -257,22 +265,22 @@ void timer2 (uint8_t wert)
    
    // enable global interrupts
    
-   sei();
+ //  sei();
 } 
 
 #pragma mark INT0
 ISR(INT0_vect) 
 {
    //OSZIATOG;
-   //MOTORPORT &= ~(1<<LAMPE); // 2 us
+   //MOTORPORT &= ~(1<<LAMPE); // 
    
    if (INT0status == 0) // neue Daten beginnen
    {
-      MOTORPORT &= ~(1<<LAMPE); // 2 us
+      //MOTORPORT &= ~(1<<LAMPE); // 6 us insgesamt
       INT0status |= (1<<INT0_RUN); // datenfluss im Gang
       int0counter = 0;
       
-      INT0status |= (1<<INT0_START);
+ //     INT0status |= (1<<INT0_START);
       INT0status |= (1<<INT0_WAIT); // delay, um Wert des Eingangs zum richtigen Zeitpunkt zu messen
       
       INT0status |= (1<<INT0_PAKET_A); // erstes Paket lesen
@@ -316,7 +324,7 @@ ISR(INT0_vect)
       //   INT0status |= (1<<INT0_RISING); // wait for next rise
       //    MCUCR = (1<<ISC00) |(1<<ISC01); // raise int0 on rising edge
    }
-   MOTORPORT |= (1<<LAMPE);
+   //MOTORPORT |= (1<<LAMPE);
    
 }
 
@@ -344,21 +352,21 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed > 0
       motorcounter = 0;
    }
    
-    // Lampe PWM
-   if (lokstatus & (1<<FUNKTIONBIT)) // Lampe ist ON
+    // Lampe PWM bei Re44
+   if ((lokstatus & (1<<FUNKTIONBIT)) && (LOK_TYP == LOK_TYP_RE44)) // Lampe ist ON
    {
-      /*
+      
       lampePWM++;
       if (lampePWM > LAMPEMAX)
       {
          MOTORPORT |= (1<<LAMPE); // lampe OFF
       }
-      if (lampePWM == 0)
+      if (lampePWM == 0) // nach 0xFF
       {
          MOTORPORT &= ~(1<<LAMPE); // Lampe wieder ON
          //lampePWM = 0;
       }
-       */
+       
    } // if lampe ON
 
 
@@ -500,10 +508,12 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed > 0
                      //deffunktion = (rawdataB & 0x03); // bit 0,1 funktion als eigene var
                      deffunktion = rawfunktionB;
                      uint8_t speedcode = 0;
-                     /*
+                     
                      if (deffunktion)
                      {
                         lokstatus |= (1<<FUNKTIONBIT);
+                         
+                      
                         switch (LOK_TYP)
                         {
                            case  LOK_TYP_DIESEL:
@@ -512,7 +522,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed > 0
                            }break;
                            case  LOK_TYP_RE44:
                            {
-                              MOTORPORT &= ~(1<<LAMPE);
+                              //MOTORPORT &= ~(1<<LAMPE); // PWM in ISR 
                            }break;
                            default:
                            {
@@ -520,9 +530,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed > 0
                            }break;
                               
                         }// switch lok_typ
-                        
-                          
-                     
+                       
                      }
                      else
                      {
@@ -536,7 +544,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed > 0
                             }break;
                             case  LOK_TYP_RE44:
                             {
-                               MOTORPORT |= (1<<LAMPE);
+                               //MOTORPORT |= (1<<LAMPE);// PWM in ISR 
                             }break;
                               
                             default:
@@ -546,7 +554,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed > 0
                          }// switch lok_typ
                        
                      }
-                     */
+                     
                      
                      for (uint8_t i=0;i<8;i++)
                      {
@@ -718,30 +726,31 @@ void main (void)
    wdt_disable();
   
    MOTORDDR &= ~(1<<MOTORAUX);  // Input, AUX, Sniffer fuer DIR nach reset
-   MOTORDDR |= (1<<MOTORDIR);  // Output Motor PWM  
+   MOTORDDR |= (1<<MOTORDIR);  // Output Motor DIR 
+   
    
    if (MOTORPIN & (1<<MOTORAUX)) // AUX ist noch HI
    {
       lastDIR = 1;
       MOTORPORT |= (1<<MOTORDIR); 
-      MOTORPORT |= (1<<MOTOROUT); 
+  //    MOTORPORT |= (1<<MOTOROUT); 
       //loopledtakt = 0x1FFF;
    }
    else 
    {
       lastDIR = 0;
       MOTORPORT &= ~(1<<MOTORDIR);
-      MOTORPORT |= (1<<MOTOROUT); 
+  //    MOTORPORT |= (1<<MOTOROUT); 
       // loopledtakt = 0x0FFF;
    }
    
-   //   lastDIR = 1;
+//   lastDIR = 1;
+//   MOTORPORT |= (1<<MOTORDIR); 
    slaveinit();
   
  //  int0_init();
    
-   timer2(4);
-   
+//   timer2(4);
    uint8_t loopcount0=0;
    uint8_t loopcount1=0;
    
@@ -767,7 +776,10 @@ void main (void)
    wdt_enable(WDTO_15MS);  // Set watchdog timeout to 15 milliseconds
    wdt_reset();
    INT0status = 0;
-   sei();
+   
+  // sei();
+   MOTORDDR |= (1<<MOTOROUT);  // Output Motor PWM   
+   MOTORPORT |= (1<<MOTOROUT); // HI, Motor OFF
    
    
    while (1)
@@ -779,9 +791,14 @@ void main (void)
          firstruncount++;
          if (firstruncount == FIRSTRUN_END)
          {
-         int0_init();
-         //   timer2(4);
-            INT0status =0;            
+            MOTORDDR &= ~(1<<MOTORINT0); 
+            int0_init();
+            timer2(4);
+            INT0status =0;  
+            sei();
+    //        MOTORDDR |= (1<<MOTOROUT);  // Output Motor PWM   
+    //        MOTORPORT |= (1<<MOTOROUT); // HI, Motor OFF
+            
          }
 
       }
