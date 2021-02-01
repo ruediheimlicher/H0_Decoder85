@@ -46,6 +46,7 @@
 //#define STATUSDDR    DDRC
 
 
+
 #define MOTORPORT   PORTB
 #define MOTORDDR    DDRB
 #define MOTORPIN    PINB
@@ -54,9 +55,29 @@
 
 #define MOTORDIR      0
 #define MOTOROUT      1
-// INT0               2
+#define MOTORINT0     2
 #define MOTORAUX      3
 #define LAMPE         4
+
+#define LAMPE_ON_RE44 MOTORPORT |= (1<<LAMPE)
+#define LAMPE_OFF_RE44 MOTORPORT &= ~(1<<LAMPE)
+
+#define LAMPE_ON_DIESEL MOTORPORT &= ~(1<<LAMPE)
+#define LAMPE_OFF_DIESEL MOTORPORT |= (1<<LAMPE)
+
+
+/*
+ case  LOK_TYP_DIESEL:
+   {
+      MOTORPORT |= (1<<LAMPE);
+   }break;
+   case  LOK_TYP_RE44:
+   {
+      MOTORPORT &= ~(1<<LAMPE);
+   }break;
+
+ 
+ */
 
 #define MOTORTEILER   1
 
@@ -107,6 +128,6 @@
 
 #define LAMPEMAX 0x40 // 50%
 
-#define FIRSTRUN_END 2
+#define FIRSTRUN_END 4
 
 #endif /* defines_h */
