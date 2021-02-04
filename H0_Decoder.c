@@ -125,41 +125,41 @@ volatile uint8_t   wdtcounter = 0;
 volatile uint8_t   int0counter = 0; // detektiert datenfluss
 
 // linear
-//volatile uint8_t   speedlookup[15] = {0,18,36,54,72,90,108,126,144,162,180,198,216,234,252};
+//volatile uint8_t   speedlookup_re44[15] = {0,18,36,54,72,90,108,126,144,162,180,198,216,234,252};
 
 
-//volatile uint8_t   speedlookup[15] = {0,10,20,30,40,50,60,70,80,90,100,110,120,130,140};
+//volatile uint8_t   speedlookup_re44[15] = {0,10,20,30,40,50,60,70,80,90,100,110,120,130,140};
 // linear 100
-//volatile uint8_t   speedlookup[15] = {0,7,14,21,28,35,42,50,57,64,71,78,85,92,100};
+//volatile uint8_t   speedlookup_re44[15] = {0,7,14,21,28,35,42,50,57,64,71,78,85,92,100};
 
 //Diesel
 // linear 80 
-//volatile uint8_t   speedlookup[15] = {0,5,11,17,22,28,34,40,45,51,57,62,68,74,80};
+//volatile uint8_t   speedlookup_re44[15] = {0,5,11,17,22,28,34,40,45,51,57,62,68,74,80};
 
 // linear 250 mit offset 20
-//volatile uint8_t   speedlookup[15] = {0,36,52,69,85,102,118,135,151,167,184,200,217,233,250};
+//volatile uint8_t   speedlookup_re44[15] = {0,36,52,69,85,102,118,135,151,167,184,200,217,233,250};
 
 // linear mit offset 30
-//volatile uint8_t   speedlookup[15] = {0,33,37,40,44,47,51,55,58,62,65,69,72,76,80};
+//volatile uint8_t   speedlookup_re44[15] = {0,33,37,40,44,47,51,55,58,62,65,69,72,76,80};
 
 // linear mit offset 22
-//volatile uint8_t   speedlookup[15] = {0,26,30,34,38,42,46,51,55,59,63,67,71,75,80};
+//volatile uint8_t   speedlookup_re44[15] = {0,26,30,34,38,42,46,51,55,59,63,67,71,75,80};
 
 // linear mit offset 20
-//volatile uint8_t   speedlookup[15] = {0,24,28,32,37,41,45,50,54,58,62,67,71,75,80};
+//volatile uint8_t   speedlookup_re44[15] = {0,24,28,32,37,41,45,50,54,58,62,67,71,75,80};
 
 // Quadratisch  mit 250
-//volatile uint8_t   speedlookup[15] = {0,21,24,30,38,49,62,77,95,115,137,161,188,218,250};
-//volatile uint8_t   speedlookup[15] = {0,46,54,63,73,84,97,112,127,144,163,183,204,226,250,};
+//volatile uint8_t   speedlookup_re44[15] = {0,21,24,30,38,49,62,77,95,115,137,161,188,218,250};
+//volatile uint8_t   speedlookup_re44[15] = {0,46,54,63,73,84,97,112,127,144,163,183,204,226,250,};
 
 // Re44
-//volatile uint8_t   speedlookup[15] = {0,59,64,71,80,90,101,115,129,146,163,183,204,226,250,};// 
+//volatile uint8_t   speedlookup_re44[15] = {0,59,64,71,80,90,101,115,129,146,163,183,204,226,250,};// 
 
 // 10/ 80
-//volatile uint8_t   speedlookup[15] = {0,12,14,17,20,24,28,33,38,44,50,57,64,72,80,};
+//volatile uint8_t   speedlookup_re44[15] = {0,12,14,17,20,24,28,33,38,44,50,57,64,72,80,};
 
 // 12/100
-volatile uint8_t   speedlookup[15] = {0,13,14,17,20,24,29,35,42,49,58,67,77,88,100};
+volatile uint8_t   speedlookup_re44[15] = {0,13,14,17,20,24,29,35,42,49,58,67,77,88,100};
 
 volatile uint8_t   maxspeed =  252;
 
@@ -180,8 +180,9 @@ void slaveinit(void)
 //   MOTORDDR |= (1<<MOTOROUT);  // Output Motor PWM   
 //   MOTORPORT |= (1<<MOTOROUT); // HI, Motor OFF
    
-   //MOTORDDR &= ~(1<<2);
-    MOTORDDR |= (1<<MOTORINT0); 
+// INT0 Ausgang LO: Impulse beim Start unterdrŸcken
+
+   MOTORDDR |= (1<<MOTORINT0); 
    MOTORPORT &= ~(1<<MOTORINT0); 
    
    MOTORDDR |= (1<<LAMPE);  // Lampe
@@ -203,7 +204,7 @@ void slaveinit(void)
          
    }// switch lok_typ
    
-   maxspeed =  252;//speedlookup[14];
+   maxspeed =  252;//speedlookup_re44[14];
    INT0status = 0;
 }
 
@@ -341,6 +342,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed > 0
          motorcounter = 0;
       }
    }
+   
    if ((motorPWM > speed) || (speed == 0)) // Impulszeit abgelaufen oder speed ist 0
    {
       MOTORPORT |= (1<<MOTOROUT); // OFF, Motor ist active LO
@@ -644,7 +646,7 @@ ISR(TIMER0_COMPA_vect) // Schaltet Impuls an MOTOROUT LO wenn speed > 0
                               break;
                               
                         }
-                        speed = speedlookup[speedcode];
+                        speed = speedlookup_re44[speedcode];
                      }
                   }
                   else // Lok stimmt nicht
@@ -726,20 +728,20 @@ void main (void)
    wdt_disable();
   
    MOTORDDR &= ~(1<<MOTORAUX);  // Input, AUX, Sniffer fuer DIR nach reset
-   MOTORDDR |= (1<<MOTORDIR);  // Output Motor DIR 
+//   MOTORDDR |= (1<<MOTORDIR);  // Output Motor DIR 
    
    
    if (MOTORPIN & (1<<MOTORAUX)) // AUX ist noch HI
    {
       lastDIR = 1;
-      MOTORPORT |= (1<<MOTORDIR); 
+ //     MOTORPORT |= (1<<MOTORDIR); 
   //    MOTORPORT |= (1<<MOTOROUT); 
       //loopledtakt = 0x1FFF;
    }
    else 
    {
       lastDIR = 0;
-      MOTORPORT &= ~(1<<MOTORDIR);
+//      MOTORPORT &= ~(1<<MOTORDIR);
   //    MOTORPORT |= (1<<MOTOROUT); 
       // loopledtakt = 0x0FFF;
    }
@@ -750,15 +752,12 @@ void main (void)
   
  //  int0_init();
    
-//   timer2(4);
+   timer2(4);
    uint8_t loopcount0=0;
    uint8_t loopcount1=0;
    
     uint8_t firstruncount=0;
-   
-   
-   
-   
+      
    //_delay_ms(2);
    oldfunktion = 0x03; // 0x02
    oldlokdata = 0xCC; // 
@@ -777,9 +776,9 @@ void main (void)
    wdt_reset();
    INT0status = 0;
    
-  // sei();
-   MOTORDDR |= (1<<MOTOROUT);  // Output Motor PWM   
-   MOTORPORT |= (1<<MOTOROUT); // HI, Motor OFF
+   sei();
+//   MOTORDDR |= (1<<MOTOROUT);  // Output Motor PWM   
+//   MOTORPORT |= (1<<MOTOROUT); // HI, Motor OFF
    
    
    while (1)
@@ -791,9 +790,23 @@ void main (void)
          firstruncount++;
          if (firstruncount == FIRSTRUN_END)
          {
-            MOTORDDR &= ~(1<<MOTORINT0); 
+            MOTORDDR |= (1<<MOTORDIR); // ausgang
+            if (lastDIR)
+            {
+               MOTORPORT |= (1<<MOTORDIR);
+            }
+            else
+            {
+               MOTORPORT &= ~(1<<MOTORDIR); 
+            }
+            MOTORDDR |= (1<<MOTOROUT);  // Output Motor PWM   
+            MOTORPORT |= (1<<MOTOROUT); // HI, Motor OFF
+            
+             sei();
+            MOTORDDR &= ~(1<<MOTORINT0); // Eingang
+            
             int0_init();
-            timer2(4);
+            //timer2(4);
             INT0status =0;  
             sei();
     //        MOTORDDR |= (1<<MOTOROUT);  // Output Motor PWM   

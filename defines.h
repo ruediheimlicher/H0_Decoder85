@@ -128,6 +128,6 @@
 
 #define LAMPEMAX 0x40 // 50%
 
-#define FIRSTRUN_END 4
+#define FIRSTRUN_END 40
 
 #endif /* defines_h */
