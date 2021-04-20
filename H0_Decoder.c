@@ -802,7 +802,7 @@ void main (void)
             MOTORDDR |= (1<<MOTOROUT);  // Output Motor PWM   
             MOTORPORT |= (1<<MOTOROUT); // HI, Motor OFF
             
-             sei();
+            sei();
             MOTORDDR &= ~(1<<MOTORINT0); // Eingang
             
             int0_init();
