@@ -30,7 +30,7 @@
 #include "defines.h"
 
 #define LOK_TYP_DIESEL  1
-#define LOK_TYP_RE44  2
+#define LOK_TYP_RE44    2
 
 
 //***********************************
@@ -68,10 +68,10 @@ volatile uint8_t   address=0x00;
 volatile uint8_t   data=0x00;   
 
 //volatile uint16_t   HIimpulsdauer=0;         //   Dauer des LOimpulsdaueres Definitiv
-volatile uint8_t   HIimpulsdauerPuffer=22;      //   Puffer fuer HIimpulsdauer
-volatile uint8_t   HIimpulsdauerSpeicher=0;      //   Speicher  fuer HIimpulsdauer
+//volatile uint8_t   HIimpulsdauerPuffer=22;      //   Puffer fuer HIimpulsdauer
+//volatile uint8_t   HIimpulsdauerSpeicher=0;      //   Speicher  fuer HIimpulsdauer
 
-volatile uint8_t   LOimpulsdauerOK=0;   
+//olatile uint8_t   LOimpulsdauerOK=0;   
 
 volatile uint8_t   pausecounter = 0; //  neue Šdaten detektieren
 volatile uint8_t   abstandcounter = 0; // zweites Paket detektieren
@@ -169,8 +169,8 @@ uint8_t loopledtakt = 0x1F;
 
 void slaveinit(void)
 {
- 	//OSZIPORT |= (1<<OSZIA);	//Pin 6 von PORT D als Ausgang fuer OSZI A
-	//OSZIDDR |= (1<<OSZIA);	//Pin 7 von PORT D als Ausgang fuer SOSZI B
+ 	OSZIPORT |= (1<<OSZIA);	//Pin 6 von PORT D als Ausgang fuer OSZI A
+	OSZIDDR |= (1<<OSZIA);	//Pin 7 von PORT D als Ausgang fuer SOSZI B
 
 
    //   LOOPLEDDDR |=(1<<LOOPLED); // HI
@@ -272,7 +272,7 @@ void timer2 (uint8_t wert)
 #pragma mark INT0
 ISR(INT0_vect) 
 {
-   //OSZIATOG;
+   OSZIATOG;
    //MOTORPORT &= ~(1<<LAMPE); // 
    
    if (INT0status == 0) // neue Daten beginnen
