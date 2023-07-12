@@ -51,14 +51,28 @@
 #define MOTORPIN    PINB
 
 //PINS
+// von Decoder84
+
+#define MOTORA_PIN      0
+#define MOTORB_PIN      1
+
+#define LAMPEA_PIN  3
+#define LAMPEB_PIN  4
+
 
 #define MOTORDIR      0
 #define MOTOROUT      1
-// INT0               2
+#define MOTORINT0     2
 #define MOTORAUX      3
 #define LAMPE         4
 
+#define LAMPE_ON_RE44 MOTORPORT |= (1<<LAMPE)
+#define LAMPE_OFF_RE44 MOTORPORT &= ~(1<<LAMPE)
 
+#define LAMPE_ON_DIESEL MOTORPORT &= ~(1<<LAMPE)
+#define LAMPE_OFF_DIESEL MOTORPORT |= (1<<LAMPE)
+
+#define MOTORTEILER   1
 
 // Bits
 #define FUNKTIONOK   2
@@ -78,10 +92,11 @@
 
 #define ADDRESSBIT   0
 #define DATABIT      2
+#define VORBIT       3 // eingestellte richtung
 #define FUNKTIONBIT  4
 #define OLDRICHTUNGBIT  5
 #define RICHTUNGBIT  6
-#define STARTDELAYBIT  7
+//#define STARTDELAYBIT  7
 
 #define STARTDELAY 100
 
@@ -91,8 +106,8 @@
 #define TRIT3 3
 #define TRIT4 4
 
-#define HI_IMPULSDAUER 10
-#define LO_IMPULSDAUER 20
+//#define HI_IMPULSDAUER 10
+//#define LO_IMPULSDAUER 20
 
 #define INPIN     PINB
 #define INT0_START   0
@@ -101,5 +116,12 @@
 
 #define INT0_PAKET_A 4
 #define INT0_PAKET_B 5
+
+#define INT0_RUN 7 // detektiert Datenfluss
+
+#define LAMPEMAX 0x40 // 50%
+
+#define FIRSTRUN_END 80
+
 
 #endif /* defines_h */
