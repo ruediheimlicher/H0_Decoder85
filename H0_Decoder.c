@@ -35,7 +35,10 @@
 
 //***********************************
 						
-uint8_t  LOK_ADRESSE = 0xF3; //	1011 binaer 11001111	Trinär
+//uint8_t  LOK_ADRESSE = 0xF3; //	1011 binaer 11001111	Trinär
+
+// Test Bridge
+uint8_t LOK_ADRESSE = 0x0F;
 //									
 //***********************************
 
@@ -272,7 +275,7 @@ void timer2 (uint8_t wert)
 #pragma mark INT0
 ISR(INT0_vect) 
 {
-   OSZIATOG;
+   //OSZIATOG;
    //MOTORPORT &= ~(1<<LAMPE); // 
    
    if (INT0status == 0) // neue Daten beginnen

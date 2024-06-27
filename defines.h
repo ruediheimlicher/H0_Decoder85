@@ -55,6 +55,7 @@
 
 #define MOTORDIR      0
 #define MOTOROUT      1
+
 #define MOTORINT0     2
 #define MOTORAUX      3
 #define LAMPE         4
